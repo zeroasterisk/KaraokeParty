@@ -1,0 +1,46 @@
+<template name="rooms">
+<h2>Rooms</h2>
+
+{{#each rooms}}
+  <h4><a href="/room/{{_id}}">{{name}}</a></h4>
+  <p class="muted">{{desc}}</p>
+{{/each}}
+
+<hr>
+
+{{yield "rooms_create_yield"}}
+
+</template>
+
+<template name="rooms_create_prompt">
+<div class="panel panel-default">
+  <div class="panel-body">
+    <a href="#create" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> New Room</a>
+  </div>
+</div>
+</template>
+
+<template name="rooms_create_form">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Create a New Room</h4>
+  </div>
+  <div class="panel-body">
+    <form action="#save" id="rooms_create_frm" class="form-inline" role="form">
+      <div class="form-group">
+        <label class="sr-only" for="rooms_create_name">Room Name</label>
+        <input required="true" minlength="3" maxlength="64" pattern="[a-zA-Z0-9 \-\_\;\.]+"
+          type="text" class="form-control" name="name" id="rooms_create_name" placeholder="Enter Name">
+      </div>
+      <div class="form-group">
+        <label class="sr-only" for="rooms_create_desc">Short Description</label>
+        <input maxlength="128" pattern="[a-zA-Z0-9 \-\_\;\.]+"
+          type="text" class="form-control" name="desc" id="rooms_create_desc" placeholder="Short Description">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-save"></i> Save Room</button>
+      <a href="#" class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></a>
+      <span class="feedback"></span>
+    </form>
+  </div>
+</div>
+</template>

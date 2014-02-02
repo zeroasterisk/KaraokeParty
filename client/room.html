@@ -1,0 +1,130 @@
+<template name="room">
+{{#with room}}
+<h2><small>Room:</small> {{name}}</h2>
+<p class="muted">{{desc}}</p>
+
+<ul class="nav nav-tabs">
+  <li><a href="#player"><i class="glyphicon glyphicon-music"></i> Player</a></li>
+  <li><a href="#queue"><i class="glyphicon glyphicon-list-alt"></i> Queue</a></li>
+  <li><a href="#history"><i class="glyphicon glyphicon-list-alt"></i> History</a></li>
+  <li><a href="#users"><i class="glyphicon glyphicon-user"></i> Users</a></li>
+</ul>
+{{/with}}
+
+<div class="room-area">
+  {{yield "room_yield"}}
+</div>
+
+</template>
+
+
+<template name="room_player">
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Next Up</h4>
+  </div>
+  <div class="panel-body">
+    <div id="room_player_area"></div>
+    {{>room_next}}
+  </div>
+</div>
+</template>
+
+<template name="room_next">
+    <div class="row">
+    {{#each next}}
+      {{>room_queue_thumb}}
+    {{/each}}
+    </div>
+</template>
+
+<template name="room_queue">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Queue</h4>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+    {{#each queue}}
+      {{>room_queue_thumb}}
+    {{/each}}
+    </div>
+      <a href="#queue_add" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> Add Track</a>
+  </div>
+</div>
+</template>
+
+<template name="room_history">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">History</h4>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+    {{#each history}}
+      {{>room_queue_thumb}}
+    {{/each}}
+    </div>
+  </div>
+</div>
+</template>
+
+<template name="room_queue_thumb">
+<div class="col-xs-6 col-sm-3 col-md-2">
+  <div class="thumbnail room_queue_thumb">
+    {{#if isMe creator}}
+      <a class="queue_remove btn btn-xs btn-warning" data-id="{{_id}}" href="#queue"><i class="glyphicon glyphicon-remove"></i> Remove</a>
+    {{/if}}
+    {{trackThumbnail track}}
+    {{#if isMe creator}}
+      <span class="queue_me label label-warning">Me</span>
+    {{/if}}
+  </div>
+</div>
+</template>
+
+<template name="room_queue_add">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Search Tracks</h4>
+  </div>
+  <div class="panel-body">
+    <form action="#save" id="queue_add_frm" class="form-inline" role="form">
+      <div class="form-group">
+        <label class="sr-only" for="queue_add_track_search">Search Tracks</label>
+        <input
+          type="text" class="form-control" name="url" id="queue_add_track_search" placeholder="Artist or Title">
+      </div>
+      <a href="#queue_add_track" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> Track Not Found &ndash; Add New</a>
+      <span class="feedback"></span>
+    </form>
+  </div>
+</div>
+</template>
+
+<template name="room_queue_add_track">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Add a New Track</h4>
+  </div>
+  <div class="panel-body">
+    <form action="#save" id="queue_add_track_frm" class="form-inline" role="form">
+      <div class="form-group">
+        <label class="sr-only" for="queue_add_track_url">Url</label>
+        <input required="true" minlength="3" maxlength="512"
+          type="url" class="form-control" name="url" id="queue_add_track_url" placeholder="Enter URL to Track">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-save"></i> Save Track</button>
+      <a href="#queue" class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></a>
+      <span class="help-block">Enter a full URL: eg: http://www.youtube.com/watch?v=dSVovg06NQg</span>
+      <span class="feedback" id="queue_add_track_feedback"></span>
+    </form>
+  </div>
+</div>
+</template>
+
+<template name="room_users">
+Users
+</template>
+

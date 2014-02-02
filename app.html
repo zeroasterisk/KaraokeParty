@@ -1,0 +1,27 @@
+<template name="layout">
+  {{>header}}
+  <div class="container">
+  {{yield}}
+  </div>
+  {{>footer}}
+  {{>player}}
+</template>
+
+
+<template name="player">
+{{#constant}}
+<div id="player" class="well-sm">
+  <div id="player_area">
+  </div>
+  <div id="player_controls">
+    <div class="btn-group">
+      <a href="#" id="playing_prev" class="btn btn-default"><i class="glyphicon glyphicon-step-backward"></i></a>
+      <a href="#" id="playing_pause" class="btn btn-default"><i class="glyphicon glyphicon-pause"></i></a>
+      <a href="#" id="playing_play" class="btn btn-default"><i class="glyphicon glyphicon-play"></i></a>
+      <a href="#" id="playing_next" class="btn btn-default"><i class="glyphicon glyphicon-step-forward"></i></a>
+    </div>
+  </div>
+</div>
+{{/constant}}
+</template>
+
