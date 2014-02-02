@@ -80,7 +80,7 @@ Meteor.methods({
         playing = Queues.findOne({room_id: room_id, status: { $nin: [ 'playing', 'paused', 'played' ] }}, {sort: {created: 1}});
     }
     if (playing) {
-      Queues.update({_id: playing._id}, { $set: {status: 'skip-backed'}});
+      Queues.update({_id: playing._id}, { $set: {status: 'skip-backed', start: 0}});
     }
     // set playing to 1 prev 'played'
     var prev = Queues.findOne({room_id: room_id, status: 'played' }, {sort: {created: 1}});
@@ -88,14 +88,14 @@ Meteor.methods({
       console.log('nothing to play for prev for room_id : ' + room_id);
       return false;
     }
-    Queues.update({_id: prev._id}, { $set: {status: 'playing'}});
+    Queues.update({_id: prev._id}, { $set: {status: 'playing', start: 0}});
     return true;
   },
   playing_next: function(room_id) {
     console.log('playing_next', room_id);
     var playing = Queues.playing(room_id);
     if (playing) {
-      Queues.update({_id: playing._id}, { $set: {status: 'played'}});
+      Queues.update({_id: playing._id}, { $set: {status: 'played', start: 0}});
     }
     // set playing to 1 "next" 'played'
     var next = Queues.findOne({room_id: room_id, status: { $nin: [ 'playing', 'paused', 'played' ] }}, {sort: {created: 1}});
@@ -103,7 +103,7 @@ Meteor.methods({
       console.log('nothing to play for next for room_id : ' + room_id);
       return false;
     }
-    Queues.update({_id: next._id}, { $set: {status: 'playing'}});
+    Queues.update({_id: next._id}, { $set: {status: 'playing', start: 0}});
     return true;
   },
   playing_state: function(data) {

@@ -90,6 +90,7 @@ Router.map(function () {
       if (_.has(params, 'hash') && _.isString(params.hash) && params.hash.length) {
         hash = params.hash;
       }
+      $('#player').hide();
       // switch yield
       switch(hash) {
         case 'queue':
@@ -101,10 +102,14 @@ Router.map(function () {
         case 'queue_add_track':
           this.render('room_queue_add_track', {to: 'room_yield'});
           break;
+        case 'history':
+          this.render('room_history', {to: 'room_yield'});
+          break;
         case 'users':
           this.render('room_users', {to: 'room_yield'});
           break;
         default:
+          $('#player').show();
           this.render('room_player', {to: 'room_yield'});
       }
     },
@@ -114,6 +119,12 @@ Router.map(function () {
       if (_.has(params, 'hash') && _.isString(params.hash) && params.hash.length) {
         hash = params.hash;
       }
+      // ensure playing
+      var playing = Queues.playing(this.params._id);
+      if (!playing) {
+        Meteor.call('playing_next', this.params._id);
+      }
+      console.log('playing', playing);
       // switch active tab
       var tabA = $('a[href="#' + hash + '"]');
       if (tabA.length > 0) {
