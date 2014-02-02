@@ -46,16 +46,20 @@ Template.player.playYouTube = function(data) {
   }
   Template.player.monitorId = Meteor.setInterval(function() {
     if ($('#player_area').data('videoApiLoaded') != $('#player_area').data('videoId')) {
-      console.log('Meteor.setInterval-skipped-videoIdsDoNotMatch');
+      //console.log('Meteor.setInterval-skipped-videoIdsDoNotMatch');
       return;
     }
     if (!_.has(Template.player, 'youTubePlayer')) {
-      console.log('Meteor.setInterval-skipped-missing-youTubePlayer');
+      //console.log('Meteor.setInterval-skipped-missing-youTubePlayer');
+      return;
+    }
+    if (Template.player.youTubePlayer.getPlayerState() != 1) {
+      //console.log('Meteor.setInterval-skipped-not-playing');
       return;
     }
     var currentTime = Template.player.youTubePlayer.getCurrentTime();
     if (Math.abs($('#player_area').data('videoStart') - currentTime) < 2) {
-      console.log('Meteor.setInterval-skipped-start-in-sync');
+      //console.log('Meteor.setInterval-skipped-start-in-sync');
       return;
     }
     Meteor.call('playing_state', {
@@ -74,6 +78,11 @@ Template.player.playYouTubeApi = function(data) {
   }
   if ($('#player_area').data('videoApiLoaded') == data.videoId) {
     console.log('player.playYouTubeApi: loaded');
+    if (_.has(Template.player.youTubePlayer, 'getPlayerState') && Template.player.youTubePlayer.getPlayerState() == 1) {
+      console.log('player.playYouTubeApi: playing');
+      return;
+    }
+    Template.player.youTubePlayer.playVideo();
     return;
   }
   // YouTube is ready, but we don't have the player "started" on this object
@@ -123,37 +132,63 @@ Template.player.play = function() {
   };
   data.height = Math.round(data.width * 3 / 4);
   // position player
+  var offset = $("#room_player_area").css({
+    height: data.height,
+  });
   var offset = $("#room_player_area").offset();
   $('#player').css({
     position: 'absolute',
     left: offset.left,
     top: offset.top
   });
-
   console.log('playing.play: data', data);
-
   if (playing.url.indexOf('youtube.com')) {
-Template.player.playYouTube(data);
-Template.player.playYouTubeApi(data);
-
+    Template.player.playYouTube(data);
+    Template.player.playYouTubeApi(data);
     return;
   }
 
 };
+Template.player.pause = function() {
+  if ($('#player_area').data('type') == 'youtube') {
+    if (_.has(Template.player.youTubePlayer, 'getPlayerState') && Template.player.youTubePlayer.getPlayerState() == 1) {
+      Template.player.youTubePlayer.pauseVideo();
+    }
+  }
+}
 
 // -------------------------------
 // Player Controls
 Template.player.events({
   'click #playing_prev': function(e) {
-    Meteor.call('playing_prev', Session.get('room_id'));
+    Template.player.pause();
+    Meteor.call('playing_prev', Session.get('room_id'), function(error, response) {
+      if (response) {
+        Template.player.play();
+      }
+    });
+    return false;
   },
   'click #playing_pause': function(e) {
+    Template.player.pause();
     Meteor.call('playing_pause', Session.get('room_id'));
+    return false;
   },
   'click #playing_play': function(e) {
-    Meteor.call('playing_play', Session.get('room_id'));
+    Meteor.call('playing_play', Session.get('room_id'), function(error, response) {
+      if (response) {
+        Template.player.play();
+      }
+    });
+    return false;
   },
   'click #playing_next': function(e) {
-    Meteor.call('playing_next', Session.get('room_id'));
+    Template.player.pause();
+    Meteor.call('playing_next', Session.get('room_id'), function(error, response) {
+      if (response) {
+        Template.player.play();
+      }
+    });
+    return false;
   }
 });
