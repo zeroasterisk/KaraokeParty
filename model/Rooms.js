@@ -1,6 +1,45 @@
 Rooms = new Meteor.Collection('rooms');
 
 /**
+ * Is a user a DJ for this room?
+ *
+ * @return boolean
+ */
+Rooms.isDJ = function(userId, roomId) {
+  // get and vet userId()
+  if (_.isUndefined(userId)) {
+    userId = Meteor.userId();
+  }
+  if (_.isObject(userId) && _.has(userId, '_id')) {
+    userId = userId._id;
+  }
+  if (!_.isString(userId)) {
+    userId = Meteor.userId();
+  }
+  if (!_.isString(userId) || String(userId).length < 5) {
+    return false;
+  }
+  // do we know the room?
+  if (_.isUndefined(roomId)) {
+    roomId = Session.get('room_id');
+  }
+  if (!_.isString(roomId) || String(roomId).length < 5) {
+    return false;
+  }
+  var room = Rooms.findOne(roomId);
+  // is the user a DJ for this room?
+  if (_.has(room, 'djs') && _.contains(room.djs, userId)) {
+    return true;
+  }
+  // does this room have a DJ?
+  if (_.has(room, 'djs') && room.djs.length > 0) {
+    return false;
+  }
+  // no DJs means everyone is a DJ (party!)
+  return true;
+};
+
+/**
  * Client --> Server Methods
  * (even though this is defined client & server, it's only actually run on the server)
  */
@@ -24,3 +63,4 @@ Meteor.methods({
     return Rooms.update({_id: room_id}, { $pull: { users: Meteor.userId() } } );
   }
 });
+

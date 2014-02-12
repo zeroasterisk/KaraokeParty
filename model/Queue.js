@@ -1,6 +1,37 @@
 Queues = new Meteor.Collection('queues');
 
-Queues.playing = function(room_id) { return Queues.findOne({room_id: room_id, status: { $in: ['playing', 'paused'] }}); }
+Queues.isPlaying = function(queue) { return (_.isObject(queue) && _.has(queue, 'ord') && queue.ord == 0); }
+Queues.isInQueue = function(queue) { return (_.isObject(queue) && _.has(queue, 'ord') && queue.ord > 0); }
+Queues.isInHistory = function(queue) { return (_.isObject(queue) && _.has(queue, 'ord') && queue.ord < 0); }
+Queues.playing = function(room_id) {
+  return Queues.findOne(
+    {room_id: room_id, ord: 0}
+  );
+};
+Queues.queue = function(room_id) {
+  return Queues.find(
+    {room_id: room_id, ord: { $gt: 0 }},
+    {limit: 100, sort: {ord: 1}}
+  );
+};
+Queues.history = function(room_id) {
+  return Queues.find(
+    {room_id: room_id, ord: { $lt: 0 }},
+    {limit: 100, sort: {played: 1}}
+  );
+};
+Queues.queueMax = function(room_id) {
+  var max = Queues.find(
+    {room_id: room_id, ord: { $gt: 0 }},
+    {limit: 1, sort: {ord: -1}}
+  );
+  if (max.count() == 0) {
+    // nothing in queue playable
+    return 0;
+  }
+  console.log('queueMax', max);
+  return max;
+};
 
 if (Meteor.isServer) {
   /**
@@ -16,28 +47,57 @@ if (Meteor.isServer) {
       if (!_.isObject(track)) {
         throw new Meteor.Error(500, 'Can not find Track ' + data.track_id);
       }
+      console.log(Queues.queueMax(data.room_id));
+      //data.ord = 1 + Queues.queueMax(data.room_id);
+      data.ord = 9;
       data.track = track;
       data.created = moment().format();
       data.creator = Meteor.userId();
       return Queues.insert(data);
     },
     queue_add_track: function(data) {
-      console.log('queue_add_track_url', data);
-      check(data, Match.ObjectIncluding({room_id: String, url: String}));
+      console.log('queue_add_track - init', data);
+      check(data, Match.ObjectIncluding({room_id: String, type: String}));
+      if (data.type == 'yt') {
+        // youtube
+        check(data, Match.ObjectIncluding({url: String}));
+      } else {
+        // cdg
+        check(data, Match.ObjectIncluding({artist: String, title: String, url_mp3: String, url_cdg: String}));
+      }
+      data.created = moment().format();
+      data.creator = Meteor.userId();
+      console.log('queue_add_track - before Tracks.addTrack', data);
       data.track_id = Tracks.addTrack(data);
-      console.log('queue_add_track_url', data);
+      console.log('queue_add_track - after Tracks.addTrack', data);
       if (!_.isString(data.track_id)) {
         throw new Meteor.Error(500, 'Can not create Track ' + data.url);
       }
       var track = Tracks.findOne(data.track_id);
-      console.log('queue_add_track_url', track);
+      console.log('queue_add_track - track', track);
       if (!_.isObject(track)) {
         throw new Meteor.Error(500, 'Can not find new Track ' + data.track_id);
       }
       data.track = track;
       data.created = moment().format();
       data.creator = Meteor.userId();
-      return Queues.insert(data);
+      console.log('queue_add_track - insert', data);
+      id = Queues.insert(data);
+      console.log('queue_add_track - inserted', id);
+      return id;
+    },
+    queue_up: function(data) {
+      check(data, Match.ObjectIncluding({room_id: String, queue_id: String}));
+      var queue = Queues.findOne(data.queue_id);
+      if (!_.isObject(queue)) {
+        throw new Meteor.Error(500, 'Can not find new Queue to move up ' + data.queue_id);
+      }
+      if (Queue.isPlaying(queue)) {
+        return 'already playing';
+      }
+      // move everything "playable" down 1
+      Queues.update({room_id: data.room_id, ord: { $gt: current }}, { $inc: { ord: 1 }}, { multi: true });
+
     }
   });
 }
@@ -85,6 +145,9 @@ Meteor.methods({
     // set playing to 1 prev 'played'
     var prev = Queues.findOne({room_id: room_id, status: 'played' }, {sort: {created: 1}});
     if (!prev) {
+      if (playing) {
+        Queues.update({_id: playing._id}, { $set: {status: 'playing', start: 0}});
+      }
       console.log('nothing to play for prev for room_id : ' + room_id);
       return false;
     }

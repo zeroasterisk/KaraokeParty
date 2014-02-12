@@ -11,7 +11,7 @@
 </ul>
 {{/with}}
 
-<div class="room-area">
+<div id="room_area">
   {{yield "room_yield"}}
 </div>
 
@@ -33,7 +33,7 @@
 <template name="room_next">
     <div class="row">
     {{#each next}}
-      {{>room_queue_thumb}}
+      {{>room_queue_listing}}
     {{/each}}
     </div>
 </template>
@@ -41,12 +41,24 @@
 <template name="room_queue">
 <div class="panel panel-default">
   <div class="panel-heading">
+    <h4 class="panel-title">Playing</h4>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+    {{#with playing}}
+      {{>room_queue_listing}}
+    {{/with}}
+    </div>
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading">
     <h4 class="panel-title">Queue</h4>
   </div>
   <div class="panel-body">
     <div class="row">
     {{#each queue}}
-      {{>room_queue_thumb}}
+      {{>room_queue_listing}}
     {{/each}}
     </div>
       <a href="#queue_add" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> Add Track</a>
@@ -57,28 +69,76 @@
 <template name="room_history">
 <div class="panel panel-default">
   <div class="panel-heading">
+    <h4 class="panel-title">Playing</h4>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+    {{#with playing}}
+      {{>room_queue_listing}}
+    {{/with}}
+    </div>
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading">
     <h4 class="panel-title">History</h4>
   </div>
   <div class="panel-body">
     <div class="row">
     {{#each history}}
-      {{>room_queue_thumb}}
+      {{>room_queue_listing}}
     {{/each}}
     </div>
   </div>
 </div>
 </template>
 
-<template name="room_queue_thumb">
-<div class="col-xs-6 col-sm-3 col-md-2">
-  <div class="thumbnail room_queue_thumb">
-    {{#if isMe creator}}
-      <a class="queue_remove btn btn-xs btn-warning" data-id="{{_id}}" href="#queue"><i class="glyphicon glyphicon-remove"></i> Remove</a>
-    {{/if}}
-    {{trackThumbnail track}}
-    {{#if isMe creator}}
-      <span class="queue_me label label-warning">Me</span>
-    {{/if}}
+<template name="room_queue_listing">
+<div class="col-sm-6 room_queue_listing">
+  <div class="media">
+    <a class="pull-left" href="/queue/{{_id}}">
+      {{trackThumbnail track}}
+    </a>
+    <div class="media-body">
+      <h4 class="media-heading">
+        {{artist}} <em>{{title}}</em>
+      </h4>
+      {{#if isMe creator}}
+        <div class="mine">
+          <span class="queue_me label label-info">Me</span>
+          <a rel="queue_remove" class="queue_remove btn btn-xs btn-default" data-id="{{_id}}" href="#queue_remove">
+            <i class="glyphicon glyphicon-remove"></i> Remove
+          </a>
+        </div>
+      {{/if}}
+      {{#if sessionEquals "hash" "history"}}
+        <div class="dj btn-group">
+          <a rel="queue_reload" class="queue_reload btn btn-xs btn-default" data-id="{{_id}}" href="#queue_reload">
+            <i class="glyphicon glyphicon-repeat"></i> Add To Queue
+          </a>
+        </div>
+      {{else}}
+        {{#if isDJ}}
+          <div class="dj btn-group">
+            <a rel="queue_top" class="queue_top btn btn-xs btn-default" data-id="{{_id}}" href="#queue_top">
+              <i class="glyphicon glyphicon-arrow-up"></i> Top
+            </a>
+            <a rel="queue_up" class="queue_up btn btn-xs btn-default" data-id="{{_id}}" href="#queue_up">
+              <i class="glyphicon glyphicon-chevron-up"></i> Up
+            </a>
+            <a rel="queue_down" class="queue_down btn btn-xs btn-default" data-id="{{_id}}" href="#queue_down">
+              <i class="glyphicon glyphicon-chevron-down"></i> Down
+            </a>
+            <a rel="queue_end" class="queue_end btn btn-xs btn-default" data-id="{{_id}}" href="#queue_end">
+              <i class="glyphicon glyphicon-arrow-down"></i> End
+            </a>
+            <a rel="queue_remove" class="queue_remove btn btn-xs btn-default" data-id="{{_id}}" href="#queue_remove">
+              <i class="glyphicon glyphicon-remove"></i> Del
+            </a>
+          </div>
+        {{/if}}
+      {{/if}}
+    </div>
   </div>
 </div>
 </template>
@@ -91,33 +151,154 @@
   <div class="panel-body">
     <form action="#save" id="queue_add_frm" class="form-inline" role="form">
       <div class="form-group">
-        <label class="sr-only" for="queue_add_track_search">Search Tracks</label>
+        <label class="sr-only" for="queue_add_search">Search Tracks</label>
         <input
-          type="text" class="form-control" name="url" id="queue_add_track_search" placeholder="Artist or Title">
+          type="text" class="form-control" name="q" id="queue_add_search" placeholder="Artist or Title">
       </div>
       <a href="#queue_add_track" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> Track Not Found &ndash; Add New</a>
       <span class="feedback"></span>
     </form>
+    <div class="row">
+      {{#each tracks}}
+        <div class="col-sm-6">
+          <div class="media thumbnail">
+            <a class="pull-left add_track" href="#queue_add_track" data-id="{{_id}}">
+              {{trackThumbnail track}}
+            </a>
+            <div class="media-body">
+              <h4 class="media-heading">
+                {{artist}} <em>{{title}}</em>
+              </h4>
+              <a class="add_track btn btn-default btn-sm" href="#queue_add_track" data-id="{{_id}}">
+                <i class="glyphicon glyphicon-plus"></i> Add
+              </a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
   </div>
 </div>
 </template>
 
 <template name="room_queue_add_track">
+{{>room_search_youtube}}
+{{>room_queue_add_track_youtube}}
+{{>room_queue_add_track_cdg_upload}}
+</template>
+
+<template name="room_search_youtube">
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h4 class="panel-title">Add a New Track</h4>
+    <h4 class="panel-title">Search YouTube</h4>
   </div>
   <div class="panel-body">
-    <form action="#save" id="queue_add_track_frm" class="form-inline" role="form">
+    <form action="#save" id="room_search_youtube_form" class="form-horizontal" role="form">
       <div class="form-group">
-        <label class="sr-only" for="queue_add_track_url">Url</label>
-        <input required="true" minlength="3" maxlength="512"
-          type="url" class="form-control" name="url" id="queue_add_track_url" placeholder="Enter URL to Track">
+        <label class="col-sm-3 control-label" for="youtube_search">Search</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="text" class="form-control" name="q" id="youtube_search" placeholder="Artist or Title">
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-save"></i> Save Track</button>
-      <a href="#queue" class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></a>
-      <span class="help-block">Enter a full URL: eg: http://www.youtube.com/watch?v=dSVovg06NQg</span>
-      <span class="feedback" id="queue_add_track_feedback"></span>
+    </form>
+
+    <div class="row">
+      {{#each videos}}
+        <div class="col-sm-6">
+          <div class="media thumbnail">
+              <a class="pull-left add_track" href="#add_youtube" data-id="{{id.videoId}}">
+              <img src="{{snippet.thumbnails.medium.url}}" alt="video" widget="80">
+            </a>
+            <div class="media-body">
+              <h4 class="media-heading">
+                {{snippet.title}}
+              </h4>
+              {{snippet.description}}
+              <a class="btn btn-sm btn-primary add_track" href="#add_youtube" data-id="{{id.videoId}}">
+                <i class="glyphicon glyphicon-plus"></i> Add
+              </a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</div>
+</template>
+
+<template name="room_queue_add_track_youtube">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Add A YouTube Track</h4>
+  </div>
+  <div class="panel-body">
+    <form action="#save" id="queue_add_youtube" class="form-horizontal" role="form">
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="queue_add_youtube_url">YouTube URL</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="url" class="form-control" name="url" id="queue_add_youtube_url" placeholder="Enter URL to YouTube">
+          <span class="help-block">Enter a full URL: eg: http://www.youtube.com/watch?v=dSVovg06NQg</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-9 col-sm-offset-3">
+          <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-save"></i> Save Track</button>
+          <a href="#queue" class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></a>
+          <span class="feedback" id="queue_add_track_feedback"></span>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+</template>
+<template name="room_queue_add_track_cdg_upload">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Upload Your Own MP3 + CDG Files</h4>
+  </div>
+  <div class="panel-body">
+    <form action="#save" id="queue_add_cdg" class="form-horizontal" role="form">
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="queue_add_artist">Artist</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="text" class="form-control" name="artist" id="queue_add_artist" placeholder="Band or Singer">
+          <span class="help-block filepicker-drop-widget"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="queue_add_title">Title / Track</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="text" class="form-control" name="title" id="queue_add_title" placeholder="Song Title">
+          <span class="help-block filepicker-drop-widget"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="queue_add_mp3_url">MP3 URL</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="url" class="form-control" name="url" id="queue_add_mp3_url" placeholder="Enter URL to MP3">
+          <span class="help-block filepicker-drop-widget"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="queue_add_cdg_url">CDG URL</label>
+        <div class="col-sm-9">
+          <input required="true" minlength="3" maxlength="512"
+            type="url" class="form-control" name="url_cdg" id="queue_add_cdg_url" placeholder="Enter URL to CDG">
+          <span class="help-block filepicker-drop-widget"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-9 col-sm-offset-3">
+          <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-save"></i> Save Track</button>
+          <a href="#queue" class="btn btn-default"><i class="glyphicon glyphicon-remove"></i></a>
+          <span class="feedback" id="queue_add_track_feedback"></span>
+        </div>
+      </div>
     </form>
   </div>
 </div>

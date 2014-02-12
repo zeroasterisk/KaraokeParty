@@ -6,7 +6,8 @@
       "bootstrap3-less": {},
       "accounts-ui-bootstrap-3": {},
       "nprogress": {},
-      "momentjs": {}
+      "momentjs": {},
+      "bootstrap-growl": {}
     },
     "packages": {
       "iron-router": {
@@ -33,6 +34,11 @@
         "git": "https://github.com/crapthings/meteor-momentjs.git",
         "tag": "v2.1.0.2",
         "commit": "59a762e297082eea8b8cae00374c2b7ac6f89529"
+      },
+      "bootstrap-growl": {
+        "git": "https://github.com/TimHeckel/meteor-bootstrap-growl.git",
+        "tag": "v0.1.1",
+        "commit": "674fd231a46e405f8d4eb463725d8003a02374ec"
       }
     }
   }

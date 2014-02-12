@@ -71,6 +71,7 @@ Router.map(function () {
       function () {
         Session.set('room_id', this.params._id);
         this.subscribe('room', this.params._id).wait();
+        this.subscribe('tracks');
       },
       function () {
         // we're done waiting on all subs
@@ -90,9 +91,16 @@ Router.map(function () {
       if (_.has(params, 'hash') && _.isString(params.hash) && params.hash.length) {
         hash = params.hash;
       }
+      Session.set('hash', hash);
       $('#player').hide();
-      // switch yield
       switch(hash) {
+        // quick actions
+        case 'toggle-host':
+          Session.set('isHost', (!Session.get('isHost')));
+          Template.player.size();
+          window.location.hash = 'player';
+          break;
+        // switch yield
         case 'queue':
           this.render('room_queue', {to: 'room_yield'});
           break;
@@ -119,12 +127,6 @@ Router.map(function () {
       if (_.has(params, 'hash') && _.isString(params.hash) && params.hash.length) {
         hash = params.hash;
       }
-      // ensure playing
-      var playing = Queues.playing(this.params._id);
-      if (!playing) {
-        Meteor.call('playing_next', this.params._id);
-      }
-      console.log('playing', playing);
       // switch active tab
       var tabA = $('a[href="#' + hash + '"]');
       if (tabA.length > 0) {
@@ -143,7 +145,7 @@ Router.map(function () {
         room: Rooms.findOne({_id: this.params._id}),
         playing: Queues.playing(this.params._id),
         next: Queues.find({room_id: this.params._id, status: { $nin: [ 'playing', 'paused', 'played' ] }}, {limit: 5, sort: {created: 1}}),
-        queue: Queues.find({room_id: this.params._id, status: { $nin: [ 'playing', 'paused', 'played' ] }}, {limit: 100, sort: {created: 1}}),
+        queue: Queues.queue(this.params._id),
         history: Queues.find({room_id: this.params._id, status: 'played' }, {limit: 100, sort: {created: 1}})
       };
     }

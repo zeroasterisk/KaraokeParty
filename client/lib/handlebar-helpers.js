@@ -24,13 +24,17 @@
       return userId == Meteor.userId();
     });
 
+    Handlebars.registerHelper('isDJ', function (userId, roomId) {
+      return Rooms.isDJ(userId, roomId);
+    });
+
     Handlebars.registerHelper('trackThumbnail', function (track) {
       if (!_.isObject(track) || !_.has(track, 'url')) {
-        return '';
+        return new Handlebars.SafeString('<img src="/img/karaoke-icon-sm.png" width="80" alt="no thumb">');
       }
       var thumb_url = Tracks.thumbnail(track);
       var alt = track.url;
-      return new Handlebars.SafeString('<img src="' + thumb_url + '" alt="' + alt + '">');
+      return new Handlebars.SafeString('<img src="' + thumb_url + '" width="80" alt="' + alt + '">');
     });
 
     // ---------------------------------

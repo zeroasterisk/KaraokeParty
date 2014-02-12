@@ -1,161 +1,117 @@
-Template.player.youTubeApi = false;
+
 Template.player.rendered = function() {
-  Template.player.setupYouTube();
-  Template.player.play();
+  // setup "constants"
+  Template.player.start = 0;
+  Template.player.autoplay = false;
+  // setup "players"
+  playerYouTube.setup();
+  //Template.player.play();
 };
 
-onYouTubeIframeAPIReady = function() {
-  console.log('youTubePlayer.apiready');
-  Template.player.youTubeApi = true;
-  Template.player.play();
-};
-
-
-Template.player.setupYouTube = function() {
-  if (_.has(Template.player, 'setupYouTubeDone') && Template.player.setupYouTubeDone) {
-    return;
+/**
+ * Resize the player
+ * - for a "host" it's the full width of the page
+ * - for everyone else, it's only when on the player tab
+ *
+ * @param data
+ * @return data (+width +height)
+ */
+Template.player.size = function(data) {
+  if (!_.isObject(data)) {
+    data = {};
   }
-  Template.player.setupYouTubeDone = true;
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  var firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-};
-// setup this video (all DOM interactions)
-Template.player.playYouTube = function(data) {
-  data.videoId = Tracks.getIdYouTube(data.url);
-  if ($('#player_area').data('videoId') == data.videoId) {
-    // video loaded
-    console.log('playing.play: video-loaded', data);
-    return;
+  if (Session.get('isHost')) {
+    data.width = $(window).width();
+  } else {
+    data.width = $('#room_area').width();
   }
-  // load video
-  data.yturl = 'http://' + data.url + '?autoplay=1&controls=0&enablejsapi=1&modestbranding=1&rel=0&theme=light&start' + data.start;
-  console.log('playing.play: video-load', data);
-  $('#player_area')
-    .data('type', 'youtube')
-    .data('videoId', data.videoId)
-    .data('videoApiLoaded', null)
-    .data('videoStart', data.start)
-    .html(_.template('<iframe id="ytplayer" width="<%= width %>" height="<%= height %>" src="<%= yturl %>" frameborder="0" allowfullscreen></iframe>', data));
-  console.log('playing.play: video-load:done', data);
-
-  // setup monitoring on an interval
-  if (_.has(Template.player, 'monitorId')) {
-    Meteor.clearInterval(Template.player.monitorId);
-  }
-  Template.player.monitorId = Meteor.setInterval(function() {
-    if ($('#player_area').data('videoApiLoaded') != $('#player_area').data('videoId')) {
-      //console.log('Meteor.setInterval-skipped-videoIdsDoNotMatch');
-      return;
-    }
-    if (!_.has(Template.player, 'youTubePlayer')) {
-      //console.log('Meteor.setInterval-skipped-missing-youTubePlayer');
-      return;
-    }
-    if (Template.player.youTubePlayer.getPlayerState() != 1) {
-      //console.log('Meteor.setInterval-skipped-not-playing');
-      return;
-    }
-    var currentTime = Template.player.youTubePlayer.getCurrentTime();
-    if (Math.abs($('#player_area').data('videoStart') - currentTime) < 2) {
-      //console.log('Meteor.setInterval-skipped-start-in-sync');
-      return;
-    }
-    Meteor.call('playing_state', {
-      room_id: Session.get('room_id'),
-      start: currentTime,
-    });
-  }, 2000);
-};
-// trigger YouTube events
-Template.player.playYouTubeApi = function(data) {
-  // setup youTubePlayer
-  if (!Template.player.youTubeApi) {
-    // callback will auto-re-play
-    console.log('player.playYouTubeApi: skip');
-    return;
-  }
-  if ($('#player_area').data('videoApiLoaded') == data.videoId) {
-    console.log('player.playYouTubeApi: loaded');
-    if (_.has(Template.player.youTubePlayer, 'getPlayerState') && Template.player.youTubePlayer.getPlayerState() == 1) {
-      console.log('player.playYouTubeApi: playing');
-      return;
-    }
-    Template.player.youTubePlayer.playVideo();
-    return;
-  }
-  // YouTube is ready, but we don't have the player "started" on this object
-  console.log('player.playYouTubeApi: load', data, Tracks.getIdYouTube(data.url));
-  $('#player_area').data('videoApiLoaded', data.videoId);
-  // setup the Object
-  Template.player.youTubePlayer = new YT.Player('ytplayer', {
-    height: data.height,
+  // 4:3 aspect ratio
+  data.height = Math.round(data.width * 3 / 4);
+  // size #room_player_area
+  $("#room_player_area").css({
+    position: 'relative',
     width: data.width,
-    videoId: data.videoId,
-    playerVars: {
-      startSeconds: data.start,
-      autoplay: 1,
-      controls: 0,
-      enablejsapi: 1,
-      modestbranding: 1,
-      rel: 0,
-      theme: 'light'
-    },
-    events: {
-      'onReady': function(event) {
-        //console.log('youTubePlayer.onReady', event);
-        event.target.loadVideoById({'videoId': data.videoId, 'startSeconds': data.start});
-      },
-      'onStateChange': function(event) {
-        //console.log('youTubePlayer.onStateChange', event);
-        Meteor.call('playing_state', {
-          room_id: Session.get('room_id'),
-          start: event.target.getCurrentTime()
-        });
-      }
-    }
+    height: data.height,
+    top: 0,
+    left: 0
   });
+  // get "offset" of the #room_player_area
+  data.offset = $("#room_player_area").offset();
+  if (!_.isObject(data.offset) || !_.has(data.offset, 'left')) {
+    data.offset = {left: 0, top: 0};
+  }
+  if (Session.get('isHost')) {
+    data.offset.left = 0;
+  }
+  // position player
+  $('#player').css({
+    position: 'absolute',
+    width: data.width,
+    height: data.height,
+    left: data.offset.left,
+    top: data.offset.top
+  });
+  // if it contains an iframe, resize that too (no positioning)
+  if ($('#player iframe')) {
+    $('#player iframe').css({
+      width: data.width,
+      height: data.height
+    });
+  }
+  return data;
 };
+
 
 Template.player.play = function() {
   var playing = Queues.playing(Session.get('room_id'));
-  console.log('player.play', playing);
+  console.error('player.play', playing);
   if (!playing) {
     return;
   }
   // data for player layout
   var data = {
-    width: Math.min($('#room_player_area').width(), $(window).width()),
     url: playing.url,
     start: Math.round(_.has(playing, 'start') ? playing.start : 1)
   };
-  data.height = Math.round(data.width * 3 / 4);
-  // position player
-  var offset = $("#room_player_area").css({
-    height: data.height,
-  });
-  var offset = $("#room_player_area").offset();
-  $('#player').css({
-    position: 'absolute',
-    left: offset.left,
-    top: offset.top
-  });
+  // (re)size player
+  Template.player.size(data);
   console.log('playing.play: data', data);
+  // setup player constants
+  Template.player.start = data.start;
+  // player - YouTube
   if (playing.url.indexOf('youtube.com')) {
-    Template.player.playYouTube(data);
-    Template.player.playYouTubeApi(data);
+    playerYouTube.playInit(data);
+    playerYouTube.playApi(data);
     return;
   }
-
+  // player - HTML
+  playerHTML5(data);
+  playerHTML5Api(data);
+  return;
 };
+
+// trigger a pause of the player, whatever type of player it is
 Template.player.pause = function() {
+  console.log('player_pause');
   if ($('#player_area').data('type') == 'youtube') {
-    if (_.has(Template.player.youTubePlayer, 'getPlayerState') && Template.player.youTubePlayer.getPlayerState() == 1) {
-      Template.player.youTubePlayer.pauseVideo();
-    }
+    playerYouTube.pause();
   }
 }
+
+// -----------------------
+// callbacks (data from external players)
+// -----------------------
+// callback abstract, should be triggered by various player types
+Template.player.onStateChange = function(data) {
+  console.log('playing_state', data);
+  Meteor.call('playing_state', {
+    room_id: Session.get('room_id'),
+    state: data.state,
+    start: data.start
+  });
+}
+
+
 
 // -------------------------------
 // Player Controls
