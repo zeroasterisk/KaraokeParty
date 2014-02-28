@@ -19,7 +19,9 @@
 
 
 <template name="room_player">
-<div id="room_player_area"></div>
+<div id="room_player_area" class="player_area">
+  {{>player}}
+</div>
 <div class="panel panel-default">
   <div class="panel-heading">
     <h4 class="panel-title">Next Up</h4>
@@ -161,7 +163,7 @@
     <div class="row">
       {{#each tracks}}
         <div class="col-sm-6">
-          <div class="media thumbnail">
+          <div class="media">
             <a class="pull-left add_track" href="#queue_add_track" data-id="{{_id}}">
               {{trackThumbnail track}}
             </a>
@@ -195,8 +197,14 @@
   <div class="panel-body">
     <form action="#save" id="room_search_youtube_form" class="form-horizontal" role="form">
       <div class="form-group">
-        <label class="col-sm-3 control-label" for="youtube_search">Search</label>
-        <div class="col-sm-9">
+        <div class="col-xs-6 col-sm-5 col-md-4">
+          <select class="form-control" id="youtube_channel">
+            {{#each channels}}
+            <option value="{{_id}}">{{title}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="col-xs-6 col-sm-7 col-md-8">
           <input required="true" minlength="3" maxlength="512"
             type="text" class="form-control" name="q" id="youtube_search" placeholder="Artist or Title">
         </div>
@@ -205,16 +213,16 @@
 
     <div class="row">
       {{#each videos}}
-        <div class="col-sm-6">
+        <div class="col-md-6">
           <div class="media thumbnail">
-              <a class="pull-left add_track" href="#add_youtube" data-id="{{id.videoId}}">
-              <img src="{{snippet.thumbnails.medium.url}}" alt="video" widget="80">
+            <a class="pull-left add_track" href="#add_youtube" data-id="{{id.videoId}}">
+              <img src="{{snippet.thumbnails.medium.url}}" alt="video" width="80">
             </a>
             <div class="media-body">
               <h4 class="media-heading">
                 {{snippet.title}}
               </h4>
-              {{snippet.description}}
+              <small>{{snippet.description}}</small><br>
               <a class="btn btn-sm btn-primary add_track" href="#add_youtube" data-id="{{id.videoId}}">
                 <i class="glyphicon glyphicon-plus"></i> Add
               </a>

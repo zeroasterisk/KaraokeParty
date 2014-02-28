@@ -20,6 +20,7 @@ Template.player.size = function(data) {
   if (!_.isObject(data)) {
     data = {};
   }
+	return data;
   if (Session.get('isHost')) {
     data.width = $(window).width();
   } else {
@@ -27,16 +28,16 @@ Template.player.size = function(data) {
   }
   // 4:3 aspect ratio
   data.height = Math.round(data.width * 3 / 4);
-  // size #room_player_area
-  $("#room_player_area").css({
+  // size #player
+  $("#player").parent().css({
     position: 'relative',
     width: data.width,
     height: data.height,
     top: 0,
     left: 0
   });
-  // get "offset" of the #room_player_area
-  data.offset = $("#room_player_area").offset();
+  // get "offset" of the #player
+  data.offset = $("#player").offset();
   if (!_.isObject(data.offset) || !_.has(data.offset, 'left')) {
     data.offset = {left: 0, top: 0};
   }

@@ -15,3 +15,6 @@ Meteor.publish("tracks", function () {
   // TODO: limit to a subset of tracks
   return Tracks.find(); // everything
 });
+Meteor.publish("channels", function () {
+  return Channel.find(); // everything
+});

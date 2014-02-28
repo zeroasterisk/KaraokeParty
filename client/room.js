@@ -47,12 +47,34 @@ Template.room_queue_add.events({
   }
 });
 
+Template.room_search_youtube.refreshChannels = function() {
+  // https://developers.google.com/youtube/v3/docs/search/list
+  var term = Session.get('youtube_search');
+  var url = "https://www.googleapis.com/youtube/v3/search";
+  var query = "key=AIzaSyDUt-SLlrQrXGy5j42xHh0L-bDqzYwJjrE" +
+    "&part=snippet" +
+    "&regionCode=US" +
+    "&safeSearch=none" +
+    "&type=channel" +
+    "&maxResults=50" +
+    "&q=karaoke";
+  $.ajax({
+    async: false,
+    url: url,
+    data: query,
+    success: function(data) {
+      console.log('youtube-search-list-success', data);
+      Meteor.call('refreshChannels', data, Notify.callback);
+    }
+  });
+};
 Template.room_search_youtube.helpers({
   videos: function() {
     // https://developers.google.com/youtube/v3/docs/search/list
     var term = Session.get('youtube_search');
     var url = "https://www.googleapis.com/youtube/v3/search";
     var query = "key=AIzaSyDUt-SLlrQrXGy5j42xHh0L-bDqzYwJjrE" +
+      "&channelId=" + Session.get('youtube_channel') +
       "&part=snippet" +
       "&regionCode=US" +
       "&safeSearch=none" +
@@ -60,16 +82,17 @@ Template.room_search_youtube.helpers({
       "&maxResults=40" +
       "&videoEmbeddable=true" +
       "&order=viewCount" +
-      "&q=karaoke+words+" +
+      "&q=" +
+      /*
+        "karaoke+words+" +
         "-performs+" +
         "-performance+" +
-      /*
         "-impression+" +
         "-live+" +
         */
         escape(term).replace(/ /, '+');
     var videos = [];
-    console.log('youtube-search-init', term);
+    console.log('youtube-search-init', term, url + "?" + query);
     $.ajax({
       async: false,
       url: url,
@@ -84,6 +107,9 @@ Template.room_search_youtube.helpers({
   }
 });
 Template.room_search_youtube.events({
+  'change #youtube_channel': function(e) {
+    Session.set('youtube_channel', $(event.currentTarget).val());
+  },
   'keyup #youtube_search': function(e) {
     Session.set('youtube_search', $(event.currentTarget).val());
   },
