@@ -2,13 +2,26 @@
 <h2>Rooms</h2>
 
 {{#each rooms}}
-  <h4><a href="/room/{{_id}}">{{name}}</a></h4>
-  <p class="muted">{{desc}}</p>
+  <div class="row">
+    <div class="col-sm-4">
+      <h4><a href="/room/{{_id}}">{{name}}</a></h4>
+    </div>
+    <div class="col-sm-8">
+      <p class="muted">
+        {{desc}}
+        <span class="muted">{{created}}</span>
+
+    </div>
+  </div>
 {{/each}}
 
 <hr>
 
-{{yield "rooms_create_yield"}}
+{{#if promptClicked}}
+{{> rooms_create_form}}
+{{else}}
+{{> rooms_create_prompt}}
+{{/if}}
 
 </template>
 

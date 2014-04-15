@@ -37,13 +37,13 @@
         {{else}}
           <ul class="nav navbar-nav">
             <li><a href="/rooms"><span class="label label-success">Next</span> Choose Room</a></li>
-            {{loginButtons align="left"}}
+            {{> loginButtons align="left"}}
           </ul>
         {{/if}}
       {{else}}
         <ul class="nav navbar-nav">
           <li><a href="#" class="label label-warning">You Must Login</a></li>
-          {{loginButtons align="left"}}
+          {{> loginButtons align="left"}}
         </ul>
       {{/if}}
 

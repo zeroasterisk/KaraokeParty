@@ -4,3 +4,9 @@ accounts-ui-bootstrap-3
 nprogress
 momentjs
 bootstrap-growl
+/iron-router
+/accounts-ui-bootstrap-3
+/nprogress
+/blaze-layout
+/handlebar-helpers
+/moment

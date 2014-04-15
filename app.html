@@ -1,9 +1,38 @@
-<template name="layout">
-  {{>header}}
+<template name="masterLayout">
+  {{> header}}
   <div class="container">
-  {{yield}}
+    {{> yield}}
   </div>
-  {{>footer}}
+  {{> footer}}
+</template>
+
+
+<template name="loadingLayout">
+  {{> header}}
+  <div class="container">
+    <div id="loadingBar" class="progress progress-striped active">
+      <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+    {{> yield}}
+  </div>
+  {{> footer}}
+</template>
+
+
+<template name="notFoundLayout">
+  {{> header}}
+  <div class="container">
+    <div id="notFound" class="alert alert-warning">
+      <p class="lead">
+        <i class="glyphicon glyphicon-warning-sign"></i>
+        Not Found
+      </p>
+    </div>
+    {{> yield}}
+  </div>
+  {{> footer}}
 </template>
 
 

@@ -1,5 +1,17 @@
 Rooms = new Meteor.Collection('rooms');
 
+if (Meteor.isServer) {
+  /**
+   * if a room is older than 10 days = purgeable
+   */
+  Rooms.isTooOld = function(room) {
+    return (moment(room.created).diff(moment(), 'days') > 10);
+  };
+
+
+
+}
+
 /**
  * Is a user a DJ for this room?
  *
